@@ -230,6 +230,39 @@ impl Vertex {
 }
 
 //------------------------------------------------------------------------------
+//                                                                        Hatch
+//------------------------------------------------------------------------------
+#[allow(dead_code)]
+impl Hatch {
+    pub fn new(
+        pattern_name: String,
+        solid_fill: bool,
+        associative: bool,
+        hatch_style: HatchStyle,
+        pattern_type: PatternType,
+        pattern_angle: f64,
+        pattern_scale: f64,
+        pattern_double: bool,
+        pixel_size: f64,
+        n_seed_points: i32,
+    ) -> Self {
+        Hatch {
+            pattern_name,
+            solid_fill,
+            associative,
+            hatch_style,
+            pattern_type,
+            pattern_angle,
+            pattern_scale,
+            pattern_double,
+            pixel_size,
+            n_seed_points,
+            ..Default::default()
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
 //                                                                    EntityType
 //------------------------------------------------------------------------------
 impl EntityType {
