@@ -1413,3 +1413,23 @@ pub enum UnitZeroSuppression {
     IncludeZeroInchesAndSuppressZeroFeet = 3,
 }
 }
+
+enum_from_primitive! {
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
+pub enum HatchStyle {
+    Nested=0,
+    Outer=1,
+    Ignore=2,
+}
+}
+
+enum_from_primitive! {
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
+pub enum PatternType {
+    UserDefined=0,
+    Predefined=1,
+    Custom=2,
+}
+}
