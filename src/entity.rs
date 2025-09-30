@@ -832,6 +832,9 @@ impl Entity {
             EntityType::MText(ref mut mtext) => {
                 Entity::apply_custom_reader_mtext(&mut self.common, mtext, iter)
             }
+            EntityType::Hatch(ref mut hatch) => {
+                Entity::apply_custom_reader_hatch(&mut self.common, hatch, iter)
+            }
             _ => Ok(false), // no custom reader
         }
     }
@@ -1318,6 +1321,53 @@ impl Entity {
                 }
                 49 => {
                     mtext.column_gutter = pair.assert_f64()?;
+                }
+                _ => {
+                    common.apply_individual_pair(&pair, iter)?;
+                }
+            }
+        }
+    }
+    //In-Progress
+    fn apply_custom_reader_hatch(
+        common: &mut EntityCommon,
+        hatch: &mut Hatch,
+        iter: &mut CodePairPutBack,
+    ) -> DxfResult<bool> {
+        loop {
+            let pair = next_pair!(iter);
+            match pair.code {
+                2 => {
+                    hatch.pattern_name = pair.assert_string()?;
+                }
+                70 => {
+                    hatch.associative = pair.assert_i16()? != 0;
+                }
+                71 => {
+                    hatch.solid_fill = pair.assert_i16()? != 0;
+                }
+                76 => {
+                    hatch.pattern_type =
+                        enum_from_number!(PatternType, Predefined, from_i16, pair.assert_i16()?);
+                }
+                75 => {
+                    hatch.hatch_style =
+                        enum_from_number!(HatchStyle, Ignore, from_i16, pair.assert_i16()?);
+                }
+                52 => {
+                    hatch.pattern_angle = pair.assert_f64()?;
+                }
+                41 => {
+                    hatch.pattern_scale = pair.assert_f64()?;
+                }
+                77 => {
+                    hatch.pattern_double = pair.assert_i16()? != 0;
+                }
+                47 => {
+                    hatch.pixel_size = pair.assert_f64()?;
+                }
+                98 => {
+                    hatch.n_seed_points = pair.assert_i32()?;
                 }
                 _ => {
                     common.apply_individual_pair(&pair, iter)?;

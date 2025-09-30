@@ -1433,3 +1433,27 @@ pub enum PatternType {
     Custom=2,
 }
 }
+
+enum_from_primitive! {
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
+pub enum BoundaryPathType {
+    Default = 0,
+    External = 1,
+    Polyline = 2,
+    Derived = 4,
+    Textbox = 8,
+    Outermost = 16,
+}
+}
+
+enum_from_primitive! {
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
+pub enum BoundaryEdgeType {
+    Line = 1,
+    CicularArc = 2,
+    EllipticArc = 3,
+    Spline = 4,
+}
+}

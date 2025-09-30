@@ -160,6 +160,8 @@ pub use crate::transformation_matrix::TransformationMatrix;
 
 pub mod enums;
 
+pub mod hatch;
+
 mod color;
 pub use crate::color::Color;
 
