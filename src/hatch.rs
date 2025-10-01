@@ -473,8 +473,10 @@ impl HatchPatternLineData {
             let offset_y: f64 = next_pair!(parser).assert_f64()?; // Code 46: Y
             let num_dash_items: i16 = next_pair!(parser).assert_i16()?; // Code 79
             let mut dash_lengths: Vec<f64> = Vec::with_capacity(num_dash_items as usize);
-            for _ in 0..num_dash_items {
-                dash_lengths.push(next_pair!(parser).assert_f64()?);
+            if num_dash_items > 0 {
+                for _ in 0..num_dash_items {
+                    dash_lengths.push(next_pair!(parser).assert_f64()?);
+                }
             }
             let pattern_line_data = Self {
                 angle,

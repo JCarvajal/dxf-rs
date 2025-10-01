@@ -1339,13 +1339,14 @@ impl Entity {
                 78 => {
                     let line_path_count: i32 = pair.assert_i32()?;
                     if line_path_count > 0 {
-                        HatchPatternLineData::read_pattern_line(hatch, line_path_count, iter)?;
+                        let _ =
+                            HatchPatternLineData::read_pattern_line(hatch, line_path_count, iter)?;
                     }
                 }
                 91 => {
                     let boundary_path_count: i32 = pair.assert_i32()?;
                     if boundary_path_count > 0 {
-                        HatchPatternBoundaryData::read_boundary_paths_section(
+                        let _ = HatchPatternBoundaryData::read_boundary_paths_section(
                             hatch,
                             boundary_path_count,
                             iter,
