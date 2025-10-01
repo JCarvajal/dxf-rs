@@ -1339,8 +1339,7 @@ impl Entity {
                 78 => {
                     let line_path_count: i32 = pair.assert_i32()?;
                     if line_path_count > 0 {
-                        let _ =
-                            HatchPatternLineData::read_pattern_line(hatch, line_path_count, iter)?;
+                        HatchPatternLineData::read_pattern_line(hatch, line_path_count, iter)?;
                     }
                 }
                 91 => {
