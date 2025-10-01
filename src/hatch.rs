@@ -62,21 +62,24 @@ impl HatchPatternBoundaryData {
             is_closed: false,
             vertices: Vec::new(),
         };
-        let polyline_vertices_count: i32;
+        let mut polyline_vertices_count: i32 = 0;
         loop {
             let pair = next_pair!(parser);
-
             match pair.code {
+                93 => {
+                    // Codigo 93
+                    polyline_vertices_count = pair.assert_i32()?;
+                }
                 72 => {
-                    // Has Bulge flag (Optional)
+                    // Codigo 72
                     // let has_bulge = pair.assert_i16()? != 0;
                 }
                 73 => {
-                    // Is Closed flag (Opcional)
+                    // Codigo 73
                     polyline_data.is_closed = pair.assert_i16()? != 0;
                 }
-                93 => {
-                    polyline_vertices_count = pair.assert_i32()?;
+                10 | 20 => {
+                    parser.put_back(Ok(pair));
                     break;
                 }
                 _ => {
@@ -93,7 +96,6 @@ impl HatchPatternBoundaryData {
                     y: next_pair!(parser).assert_f64()?,
                     ..Default::default()
                 };
-
                 //Determines whether there's a bulge value.
                 let next_pair = next_pair!(parser);
                 if next_pair.code == 42 {
