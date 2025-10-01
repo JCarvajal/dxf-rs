@@ -2,7 +2,10 @@
 
 use enum_primitive::FromPrimitive;
 
-use crate::{CodePair, Color, DxfError, DxfResult, Handle, Point, Vector};
+use crate::{
+    CodePair, Color, DxfError, DxfResult, Handle, HatchPatternBoundaryData, HatchPatternLineData,
+    Point, Vector,
+};
 
 use crate::code_pair_put_back::CodePairPutBack;
 use crate::entities::*;
@@ -224,39 +227,6 @@ impl Vertex {
     pub fn new(location: Point) -> Self {
         Vertex {
             location,
-            ..Default::default()
-        }
-    }
-}
-
-//------------------------------------------------------------------------------
-//                                                                        Hatch
-//------------------------------------------------------------------------------
-#[allow(dead_code)]
-impl Hatch {
-    pub fn new(
-        pattern_name: String,
-        solid_fill: bool,
-        associative: bool,
-        hatch_style: HatchStyle,
-        pattern_type: PatternType,
-        pattern_angle: f64,
-        pattern_scale: f64,
-        pattern_double: bool,
-        pixel_size: f64,
-        n_seed_points: i32,
-    ) -> Self {
-        Hatch {
-            pattern_name,
-            solid_fill,
-            associative,
-            hatch_style,
-            pattern_type,
-            pattern_angle,
-            pattern_scale,
-            pattern_double,
-            pixel_size,
-            n_seed_points,
             ..Default::default()
         }
     }
@@ -1340,31 +1310,47 @@ impl Entity {
                 2 => {
                     hatch.pattern_name = pair.assert_string()?;
                 }
+                41 => {
+                    hatch.pattern_scale = pair.assert_f64()?;
+                }
+                47 => {
+                    hatch.pixel_size = pair.assert_f64()?;
+                }
+                52 => {
+                    hatch.pattern_angle = pair.assert_f64()?;
+                }
                 70 => {
                     hatch.associative = pair.assert_i16()? != 0;
                 }
                 71 => {
                     hatch.solid_fill = pair.assert_i16()? != 0;
                 }
-                76 => {
-                    hatch.pattern_type =
-                        enum_from_number!(PatternType, Predefined, from_i16, pair.assert_i16()?);
-                }
                 75 => {
                     hatch.hatch_style =
                         enum_from_number!(HatchStyle, Ignore, from_i16, pair.assert_i16()?);
                 }
-                52 => {
-                    hatch.pattern_angle = pair.assert_f64()?;
-                }
-                41 => {
-                    hatch.pattern_scale = pair.assert_f64()?;
+                76 => {
+                    hatch.pattern_type =
+                        enum_from_number!(PatternType, Predefined, from_i16, pair.assert_i16()?);
                 }
                 77 => {
                     hatch.pattern_double = pair.assert_i16()? != 0;
                 }
-                47 => {
-                    hatch.pixel_size = pair.assert_f64()?;
+                78 => {
+                    let line_path_count: i32 = pair.assert_i32()?;
+                    if line_path_count > 0 {
+                        HatchPatternLineData::read_pattern_line(hatch, line_path_count, iter)?;
+                    }
+                }
+                91 => {
+                    let boundary_path_count: i32 = pair.assert_i32()?;
+                    if boundary_path_count > 0 {
+                        HatchPatternBoundaryData::read_boundary_paths_section(
+                            hatch,
+                            boundary_path_count,
+                            iter,
+                        )?;
+                    }
                 }
                 98 => {
                     hatch.n_seed_points = pair.assert_i32()?;
@@ -1416,6 +1402,9 @@ impl Entity {
             }
             EntityType::Vertex(ref v) => {
                 Entity::add_custom_code_pairs_vertex(pairs, v, version);
+            }
+            EntityType::Hatch(ref hatch) => {
+                Entity::add_custom_code_pairs_hatch(pairs, hatch, version);
             }
             _ => return false, // no custom code pairs
         }
@@ -1615,6 +1604,15 @@ impl Entity {
         if version >= AcadVersion::R2010 {
             pairs.push(CodePair::new_i32(91, v.identifier));
         }
+        true
+    }
+    #[allow(unused_variables)]
+    fn add_custom_code_pairs_hatch(
+        pairs: &mut Vec<CodePair>,
+        hatch: &Hatch,
+        version: AcadVersion,
+    ) -> bool {
+        //TODO
         true
     }
     fn add_post_code_pairs(

@@ -31,6 +31,8 @@ use crate::{
     Point,
     Vector,
     XData,
+    HatchPatternBoundaryData,
+    HatchPatternLineData,
 };
 use crate::code_pair_put_back::CodePairPutBack;
 use crate::extension_data;
