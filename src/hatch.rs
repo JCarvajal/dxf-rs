@@ -40,8 +40,8 @@ impl HatchPatternBoundaryData {
                         path_type = Some(enum_from_number!(
                             BoundaryPathType,
                             Default,
-                            from_i16,
-                            pair.assert_i16()?
+                            from_i32,
+                            pair.assert_i32()?
                         ));
                     }
                     97 => {
