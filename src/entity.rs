@@ -1370,10 +1370,10 @@ impl Entity {
                     hatch.pattern_double = pair.assert_i16()? != 0;
                 }
                 78 => {
-                    let mut line_path_count: i16 = pair.assert_i16()?;
+                    /*let mut line_path_count: i16 = pair.assert_i16()?;
                     if line_path_count > 0 {
                         HatchPatternLineData::read_pattern_line(hatch, &mut line_path_count, iter)?;
-                    }
+                    }*/
                 }
                 91 => {
                     let mut boundary_path_count: i32 = pair.assert_i32()?;
