@@ -415,7 +415,7 @@
     <Field Name="pattern_scale" Code="41" Type="f64" DefaultValue="1.0" Comment="Pattern scale factor." />
     <Field Name="pattern_double" Code="77" Type="bool" DefaultValue="false" ReadConverter="{} != 0" WriteConverter="{} as i16" Comment="0 = Single; 1 = Double pattern" />
     <Field Name="pixel_size" Code="47" Type="f64" DefaultValue="0.0" Comment="Pixel size or spacing for fill styles." />
-    <Field Name="n_seed_points" Code="98" Type="i32" DefaultValue="0" Comment="Number of seed points." />
+    <Field Name="seed_points" Code="-1" Type="Vec&lt;Point&gt;" DefaultValue="Vec::new()" Comment="Seed points." />
     <Field Name="pattern_boundary_data" Code="-1" Type="Vec&lt;HatchPatternBoundaryData&gt;" DefaultValue="Vec::new()" WriteConverter="Vec::new()" Comment="Pattern boundary data (includes polyline and edge boundaries)." />
     <Field Name="pattern_line_data" Code="-1" Type="Vec&lt;HatchPatternLineData&gt;" DefaultValue="Vec::new()" WriteConverter="Vec::new()" Comment="Pattern line data." />
   </Entity>

@@ -1310,6 +1310,17 @@ impl Entity {
                 2 => {
                     hatch.pattern_name = pair.assert_string()?;
                 }
+                10 => {
+                    let seed_point_x = pair.assert_f64()?;
+                    let next_pair = next_pair!(iter);
+                    let seed_point_y = next_pair.assert_f64()?;
+                    let seed_point = Point {
+                        x: seed_point_x,
+                        y: seed_point_y,
+                        z: 0.0,
+                    };
+                    hatch.seed_points.push(seed_point);
+                }
                 41 => {
                     hatch.pattern_scale = pair.assert_f64()?;
                 }
@@ -1337,7 +1348,7 @@ impl Entity {
                     hatch.pattern_double = pair.assert_i16()? != 0;
                 }
                 78 => {
-                    let mut line_path_count: i32 = pair.assert_i32()?;
+                    let mut line_path_count: i16 = pair.assert_i16()?;
                     if line_path_count > 0 {
                         HatchPatternLineData::read_pattern_line(hatch, &mut line_path_count, iter)?;
                     }
@@ -1353,7 +1364,7 @@ impl Entity {
                     }
                 }
                 98 => {
-                    hatch.n_seed_points = pair.assert_i32()?;
+                    //hatch.n_seed_points = pair.assert_i32()?;
                 }
                 _ => {
                     common.apply_individual_pair(&pair, iter)?;

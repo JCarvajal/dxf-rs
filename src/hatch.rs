@@ -500,7 +500,7 @@ impl Default for HatchPatternLineData {
 impl HatchPatternLineData {
     pub(crate) fn read_pattern_line(
         hatch: &mut Hatch,
-        loop_count: &mut i32,
+        loop_count: &mut i16,
         iter: &mut CodePairPutBack,
     ) -> DxfResult<()> {
         let mut pattern_lines: Vec<Self> = Vec::new();
