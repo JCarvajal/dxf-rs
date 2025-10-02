@@ -516,10 +516,6 @@ impl HatchPatternLineData {
                     None => return Err(DxfError::UnexpectedEndOfInput),
                 };
                 match pair.code {
-                    53 => {
-                        pattern_line.angle = pair.assert_f64()?;
-                        mandatory_fields_read += 1;
-                    }
                     43 => {
                         pattern_line.base_point_x = pair.assert_f64()?;
                         mandatory_fields_read += 1;
@@ -536,13 +532,6 @@ impl HatchPatternLineData {
                         pattern_line.offset_y = pair.assert_f64()?;
                         mandatory_fields_read += 1;
                     }
-                    79 => {
-                        num_dash_items = pair.assert_i16()?;
-                        if num_dash_items <= 0 {
-                            break;
-                        }
-                        mandatory_fields_read += 1;
-                    }
                     49 => {
                         if dash_items_read < num_dash_items {
                             pattern_line.dash_lengths.push(pair.assert_f64()?);
@@ -551,6 +540,17 @@ impl HatchPatternLineData {
                         if dash_items_read == num_dash_items {
                             break;
                         }
+                    }
+                    53 => {
+                        pattern_line.angle = pair.assert_f64()?;
+                        mandatory_fields_read += 1;
+                    }
+                    79 => {
+                        num_dash_items = pair.assert_i16()?;
+                        if num_dash_items <= 0 {
+                            break;
+                        }
+                        mandatory_fields_read += 1;
                     }
                     _ => {
                         iter.put_back(Ok(pair));
