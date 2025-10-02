@@ -1385,9 +1385,6 @@ impl Entity {
                         )?;
                     }
                 }
-                98 => {
-                    //hatch.n_seed_points = pair.assert_i32()?;
-                }
                 _ => {
                     common.apply_individual_pair(&pair, iter)?;
                 }

@@ -272,7 +272,7 @@ impl HatchPatternBoundaryData {
     ) -> DxfResult<bool> {
         //Base properties (94, 73, 74)
         let mut spline_data = EdgeSplineData {
-            degree: next_pair!(parser).assert_i16()?, // Code 94
+            degree: next_pair!(parser).assert_i32()?, // Code 94
             is_rational: next_pair!(parser).assert_i16()? != 0, // Code 73
             is_periodic: next_pair!(parser).assert_i16()? != 0, // Code 74
             knots: Vec::new(),
@@ -452,7 +452,7 @@ pub struct EdgeEllipticArcData {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct EdgeSplineData {
-    pub degree: i16,
+    pub degree: i32,
     pub is_rational: bool,
     pub is_periodic: bool,
     pub knots: Vec<f64>,
@@ -506,8 +506,8 @@ impl HatchPatternLineData {
         let mut pattern_lines: Vec<Self> = Vec::new();
         while *loop_count > 0 {
             let mut pattern_line = Self::default();
-            let mut num_dash_items: i32 = 0;
-            let mut dash_items_read: i32 = 0;
+            let mut num_dash_items: i16 = 0;
+            let mut dash_items_read: i16 = 0;
             let mut mandatory_fields_read: i16 = 0;
             loop {
                 let pair = match iter.next() {
@@ -537,7 +537,7 @@ impl HatchPatternLineData {
                         mandatory_fields_read += 1;
                     }
                     79 => {
-                        num_dash_items = pair.assert_i32()?;
+                        num_dash_items = pair.assert_i16()?;
                         if num_dash_items <= 0 {
                             break;
                         }
