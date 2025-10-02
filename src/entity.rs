@@ -1304,6 +1304,7 @@ impl Entity {
         hatch: &mut Hatch,
         iter: &mut CodePairPutBack,
     ) -> DxfResult<bool> {
+        let mut elevation_point_read: bool = false;
         loop {
             let pair = next_pair!(iter);
             match pair.code {
@@ -1311,15 +1312,36 @@ impl Entity {
                     hatch.pattern_name = pair.assert_string()?;
                 }
                 10 => {
-                    let seed_point_x = pair.assert_f64()?;
-                    let next_pair = next_pair!(iter);
-                    let seed_point_y = next_pair.assert_f64()?;
-                    let seed_point = Point {
-                        x: seed_point_x,
-                        y: seed_point_y,
-                        z: 0.0,
-                    };
-                    hatch.seed_points.push(seed_point);
+                    if !elevation_point_read {
+                        elevation_point_read = true;
+                        let point_x = pair.assert_f64()?;
+
+                        let y_pair = next_pair!(iter);
+                        let y_pair_code: i32 = y_pair.code;
+                        if y_pair_code != 20 {
+                            return Err(DxfError::UnexpectedCode(y_pair_code, 0));
+                        }
+                        let point_y = y_pair.assert_f64()?;
+
+                        let z_pair = next_pair!(iter);
+                        let z_pair_code: i32 = z_pair.code;
+                        if z_pair_code != 20 {
+                            return Err(DxfError::UnexpectedCode(z_pair_code, 0));
+                        }
+                        let point_z = z_pair.assert_f64()?;
+
+                        hatch.elevation_point = Point::new(point_x, point_y, point_z);
+                    } else {
+                        let seed_point_x = pair.assert_f64()?;
+                        let next_pair = next_pair!(iter);
+                        let seed_point_y = next_pair.assert_f64()?;
+                        let seed_point = Point {
+                            x: seed_point_x,
+                            y: seed_point_y,
+                            z: 0.0,
+                        };
+                        hatch.seed_points.push(seed_point);
+                    }
                 }
                 41 => {
                     hatch.pattern_scale = pair.assert_f64()?;
