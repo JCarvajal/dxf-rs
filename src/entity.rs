@@ -1305,6 +1305,7 @@ impl Entity {
         iter: &mut CodePairPutBack,
     ) -> DxfResult<bool> {
         let mut elevation_point_read: bool = false;
+        let mut _n_seed_points: i32 = 0;
         loop {
             let pair = next_pair!(iter);
             match pair.code {
@@ -1370,7 +1371,6 @@ impl Entity {
                     hatch.pattern_double = pair.assert_i16()? != 0;
                 }
                 78 => {
-                    println!("Line pattern iteration");
                     let mut line_path_count: i16 = pair.assert_i16()?;
                     if line_path_count > 0 {
                         HatchPatternLineData::read_pattern_line(hatch, &mut line_path_count, iter)?;
@@ -1387,7 +1387,7 @@ impl Entity {
                     }
                 }
                 98 => {
-                    let _n_seed_points = pair.assert_i32()?;
+                    _n_seed_points = pair.assert_i32()?;
                 }
                 _ => {
                     common.apply_individual_pair(&pair, iter)?;
