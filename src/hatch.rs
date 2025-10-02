@@ -22,36 +22,75 @@ pub struct HatchPatternBoundaryData {
 impl HatchPatternBoundaryData {
     pub(crate) fn read_boundary_paths_section(
         hatch: &mut Hatch,
-        num_paths: i32,
-        parser: &mut CodePairPutBack,
-    ) -> DxfResult<bool> {
-        for _ in 0..num_paths {
-            let pair_92 = next_pair!(parser);
-            let path_type: BoundaryPathType =
-                enum_from_number!(BoundaryPathType, Default, from_i16, pair_92.assert_i16()?);
-            if path_type == BoundaryPathType::Polyline {
-                let _ = Self::read_polyline_boundary(hatch, path_type, parser)?;
-            } else {
-                let _ = Self::read_edge_boundary(hatch, path_type, parser)?;
-            }
-            //Source boundary object reading (TODO)
-            let pair_97 = next_pair!(parser);
-            if pair_97.code == 97 {
-                let assoc_count: i32 = pair_97.assert_i32()?;
-                for _ in 0..assoc_count {
-                    let pair_330 = next_pair!(parser);
-                    if pair_330.code != 330 {
-                        let code = pair_330.code;
-                        parser.put_back(Ok(pair_330));
-                        return Err(DxfError::UnexpectedCode(code, 0));
+        loop_count: &mut i32,
+        iter: &mut CodePairPutBack,
+    ) -> DxfResult<()> {
+        while *loop_count > 0 {
+            let mut path_type: Option<BoundaryPathType> = None;
+            let mut boundary_data_read = false;
+            let mut source_boundary_objects_count: i32 = 0;
+            loop {
+                let pair = match iter.next() {
+                    Some(Ok(pair)) => pair,
+                    Some(Err(e)) => return Err(e),
+                    None => return Err(DxfError::UnexpectedEndOfInput),
+                };
+                match pair.code {
+                    92 => {
+                        path_type = Some(enum_from_number!(
+                            BoundaryPathType,
+                            Default,
+                            from_i16,
+                            pair.assert_i16()?
+                        ));
                     }
-                    let _ = pair_330.assert_string()?;
+                    97 => {
+                        source_boundary_objects_count = pair.assert_i32()?;
+                        if boundary_data_read {
+                            *loop_count -= 1;
+                            break;
+                        }
+                    }
+                    330 => {
+                        if source_boundary_objects_count > 0 {
+                            //TODO
+                        }
+                        if boundary_data_read {
+                            *loop_count -= 1;
+                            break;
+                        }
+                    }
+                    93 => {
+                        if path_type.is_some() && !boundary_data_read {
+                            iter.put_back(Ok(pair));
+                            boundary_data_read =
+                                Self::read_edge_boundary(hatch, path_type.unwrap(), iter)?;
+                        } else {
+                            return Err(DxfError::UnexpectedEndOfInput);
+                        }
+                    }
+                    72 => {
+                        if path_type.is_some() && !boundary_data_read {
+                            iter.put_back(Ok(pair));
+                            boundary_data_read =
+                                Self::read_polyline_boundary(hatch, path_type.unwrap(), iter)?;
+                        } else {
+                            return Err(DxfError::UnexpectedEndOfInput);
+                        }
+                    }
+                    _ => {
+                        let code = pair.code;
+                        iter.put_back(Ok(pair));
+                        if boundary_data_read || code == 0 {
+                            return Ok(());
+                        } else {
+                            return Err(DxfError::UnexpectedCode(code, 0));
+                        }
+                    }
                 }
-            } else {
-                parser.put_back(Ok(pair_97));
             }
         }
-        Ok(true)
+        Ok(())
     }
     pub(crate) fn read_polyline_boundary(
         hatch: &mut Hatch,
@@ -461,34 +500,71 @@ impl Default for HatchPatternLineData {
 impl HatchPatternLineData {
     pub(crate) fn read_pattern_line(
         hatch: &mut Hatch,
-        pattern_line_count: i32,
-        parser: &mut CodePairPutBack,
-    ) -> DxfResult<bool> {
+        loop_count: &mut i32,
+        iter: &mut CodePairPutBack,
+    ) -> DxfResult<()> {
         let mut pattern_lines: Vec<Self> = Vec::new();
-        for _ in 0..pattern_line_count {
-            let angle: f64 = next_pair!(parser).assert_f64()?; // Code 53
-            let base_point_x: f64 = next_pair!(parser).assert_f64()?; // Code 43: X
-            let base_point_y: f64 = next_pair!(parser).assert_f64()?; // Code 44: Y
-            let offset_x: f64 = next_pair!(parser).assert_f64()?; // Code 45: X
-            let offset_y: f64 = next_pair!(parser).assert_f64()?; // Code 46: Y
-            let num_dash_items: i16 = next_pair!(parser).assert_i16()?; // Code 79
-            let mut dash_lengths: Vec<f64> = Vec::with_capacity(num_dash_items as usize);
-            if num_dash_items > 0 {
-                for _ in 0..num_dash_items {
-                    dash_lengths.push(next_pair!(parser).assert_f64()?);
+        while *loop_count > 0 {
+            let mut pattern_line = Self::default();
+            let mut num_dash_items: i32 = 0;
+            let mut dash_items_read: i32 = 0;
+            let mut mandatory_fields_read: i16 = 0;
+            loop {
+                let pair = match iter.next() {
+                    Some(Ok(pair)) => pair,
+                    Some(Err(e)) => return Err(e),
+                    None => return Err(DxfError::UnexpectedEndOfInput),
+                };
+                match pair.code {
+                    53 => {
+                        pattern_line.angle = pair.assert_f64()?;
+                        mandatory_fields_read += 1;
+                    }
+                    43 => {
+                        pattern_line.base_point_x = pair.assert_f64()?;
+                        mandatory_fields_read += 1;
+                    }
+                    44 => {
+                        pattern_line.base_point_y = pair.assert_f64()?;
+                        mandatory_fields_read += 1;
+                    }
+                    45 => {
+                        pattern_line.offset_x = pair.assert_f64()?;
+                        mandatory_fields_read += 1;
+                    }
+                    46 => {
+                        pattern_line.offset_y = pair.assert_f64()?;
+                        mandatory_fields_read += 1;
+                    }
+                    79 => {
+                        num_dash_items = pair.assert_i32()?;
+                        if num_dash_items <= 0 {
+                            break;
+                        }
+                        mandatory_fields_read += 1;
+                    }
+                    49 => {
+                        if dash_items_read < num_dash_items {
+                            pattern_line.dash_lengths.push(pair.assert_f64()?);
+                            dash_items_read += 1;
+                        }
+                        if dash_items_read == num_dash_items {
+                            break;
+                        }
+                    }
+                    _ => {
+                        iter.put_back(Ok(pair));
+                        break;
+                    }
                 }
             }
-            let pattern_line_data = Self {
-                angle,
-                base_point_x,
-                base_point_y,
-                offset_x,
-                offset_y,
-                dash_lengths,
-            };
-            pattern_lines.push(pattern_line_data);
+            if mandatory_fields_read < 6 {
+                return Err(DxfError::UnexpectedEndOfInput);
+            }
+            *loop_count -= 1;
+            pattern_lines.push(pattern_line);
         }
         hatch.pattern_line_data = pattern_lines;
-        Ok(true)
+        Ok(())
     }
 }
