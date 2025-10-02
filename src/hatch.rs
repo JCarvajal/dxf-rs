@@ -503,6 +503,7 @@ impl HatchPatternLineData {
         loop_count: &mut i16,
         iter: &mut CodePairPutBack,
     ) -> DxfResult<()> {
+        println!("Line pattern iteration start...");
         let mut pattern_lines: Vec<Self> = Vec::new();
         while *loop_count > 0 {
             let mut pattern_line = Self::default();
@@ -515,6 +516,7 @@ impl HatchPatternLineData {
                     Some(Err(e)) => return Err(e),
                     None => return Err(DxfError::UnexpectedEndOfInput),
                 };
+                println!("Line pattern iteration code-pair: {:?}", pair);
                 match pair.code {
                     43 => {
                         pattern_line.base_point_x = pair.assert_f64()?;
