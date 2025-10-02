@@ -1325,7 +1325,7 @@ impl Entity {
 
                         let z_pair = next_pair!(iter);
                         let z_pair_code: i32 = z_pair.code;
-                        if z_pair_code != 20 {
+                        if z_pair_code != 30 {
                             return Err(DxfError::UnexpectedCode(z_pair_code, 0));
                         }
                         let point_z = z_pair.assert_f64()?;
