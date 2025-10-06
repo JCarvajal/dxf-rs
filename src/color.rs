@@ -189,10 +189,10 @@ impl RGB {
     }
 
     pub(crate) fn writable_color_value_fallback(rgb: Option<RGB>, layer: &Layer) -> i32 {
-        if let Some (received_rgb) = rgb {
+        if let Some(received_rgb) = rgb {
             return received_rgb.writable_color_value(layer);
         }
-        if let Ok (true_color_index) = aci_to_rgb(layer.color.raw_value) {
+        if let Ok(true_color_index) = aci_to_rgb(layer.color.raw_value) {
             return true_color_index.writable_color_value(layer);
         }
         if layer.is_layer_on {
@@ -352,10 +352,10 @@ pub fn float_to_transparency(value: f64) -> i32 {
     // Returns the DXF opacity value as an integer in the 0 a 255 range,
     // where 0 is 100% transparent y 255 es opaque.
     // final value has the flag 0x02000000.
-    
+
     // Mapping: 0 (opaque) -> 255; 1 (100% transparent) -> 0
     let t_value = ((1.0 - value).clamp(0.0, 1.0) * 255.0).round() as i32;
-    
+
     // DXF formula: 0x020000TT
     t_value | 0x02000000
 }
