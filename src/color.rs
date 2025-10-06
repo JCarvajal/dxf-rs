@@ -184,7 +184,7 @@ impl RGB {
         Ok(RGB { r, g, b })
     }
 
-    pub fn luminance(&self) -> f64 {
+    pub fn get_luminance(&self) -> f64 {
         luminance_impl(&[self.r as f64, self.g as f64, self.b as f64])
     }
 
@@ -237,12 +237,8 @@ impl RGBA {
         RGBA { r, g, b, a }
     }
 
-    pub fn from_rgb(rgb: RGB, a: Option<u8>) -> Self {
-        let mut alpha_value: u8 = 255;
-        if let Some(alpha) = a {
-            alpha_value = alpha;
-        };
-        Self::new(rgb.r, rgb.g, rgb.b, alpha_value)
+    pub fn from_rgb(rgb: RGB) -> Self {
+        Self::new(rgb.r, rgb.g, rgb.b, 255)
     }
 
     pub fn from_index(index: i16) -> Option<Self> {
@@ -292,14 +288,28 @@ impl RGBA {
         let a = if hex_string.len() >= 8 {
             u8::from_str_radix(&hex_string[6..8], 16)?
         } else {
-            255 // Opaco por defecto
+            255 // Opaque by default
         };
 
         Ok(RGBA { r, g, b, a })
     }
 
-    pub fn luminance(&self) -> f64 {
+    pub fn get_luminance(&self) -> f64 {
         luminance_impl(&[self.r as f64, self.g as f64, self.b as f64])
+    }
+
+    pub fn set_opacity_32_bit(&mut self, opacity: i32) {
+        let opacidad_byte = opacity & 0xFF;
+        self.a = opacidad_byte as u8;
+    }
+
+    pub fn set_opacity(&mut self, opacity: u8) {
+        self.a = opacity;
+    }
+
+    pub fn set_opacity_float(&mut self, opacity: f64) {
+        let opacity_byte = float_to_transparency(opacity) & 0xFF;
+        self.a = opacity_byte as u8;
     }
 }
 
@@ -336,4 +346,16 @@ fn luminance_impl(color: &[f64]) -> f64 {
     (0.299 * r * r + 0.587 * g * g + 0.114 * b * b)
         .sqrt()
         .clamp(0.0, 1.0)
+}
+
+pub fn float_to_transparency(value: f64) -> i32 {
+    // Returns the DXF opacity value as an integer in the 0 a 255 range,
+    // where 0 is 100% transparent y 255 es opaque.
+    // final value has the flag 0x02000000.
+    
+    // Mapping: 0 (opaque) -> 255; 1 (100% transparent) -> 0
+    let t_value = ((1.0 - value).clamp(0.0, 1.0) * 255.0).round() as i32;
+    
+    // DXF formula: 0x020000TT
+    t_value | 0x02000000
 }
