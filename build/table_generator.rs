@@ -20,6 +20,7 @@ use crate::{
     CodePair,
     CodePairValue,
     Color,
+    RGB,
     Drawing,
     DrawingItem,
     DrawingItemMut,

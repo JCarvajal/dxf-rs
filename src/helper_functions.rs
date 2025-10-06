@@ -16,7 +16,7 @@ use enum_primitive::FromPrimitive;
 
 use crate::enums::*;
 use crate::tables::Layer;
-use crate::{CodePair, Color, DxfError, DxfResult};
+use crate::{CodePair, Color, DxfError, DxfResult, RGB};
 
 pub(crate) fn verify_code(pair: &CodePair, expected: i32) -> DxfResult<()> {
     if expected == pair.code {
@@ -289,6 +289,13 @@ fn parse_i16_test() {
 pub(crate) fn read_color_value(layer: &mut Layer, color: i16) -> Color {
     layer.is_layer_on = color >= 0;
     Color::from_raw_value(color.abs())
+}
+
+pub(crate) fn read_true_color_value(layer: &mut Layer, color: i32) -> RGB {
+    if !layer.is_layer_on {
+        layer.is_layer_on = color >= 0;
+    }
+    RGB::from_i32(color.abs())
 }
 
 pub(crate) fn read_line<T>(

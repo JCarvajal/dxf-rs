@@ -164,7 +164,7 @@ pub mod hatch;
 pub use crate::hatch::{HatchPatternBoundaryData, HatchPatternLineData};
 
 mod color;
-pub use crate::color::Color;
+pub use crate::color::{Color, RGB, RGBA};
 
 mod point;
 pub use crate::point::Point;
