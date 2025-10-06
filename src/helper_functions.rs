@@ -291,11 +291,11 @@ pub(crate) fn read_color_value(layer: &mut Layer, color: i16) -> Color {
     Color::from_raw_value(color.abs())
 }
 
-pub(crate) fn read_true_color_value(layer: &mut Layer, color: i32) -> RGB {
+pub(crate) fn read_true_color_value(layer: &mut Layer, color: i32) -> Option<RGB> {
     if !layer.is_layer_on {
         layer.is_layer_on = color >= 0;
     }
-    RGB::from_i32(color.abs())
+    Some(RGB::from_i32(color.abs()))
 }
 
 pub(crate) fn read_line<T>(

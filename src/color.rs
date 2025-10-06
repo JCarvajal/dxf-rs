@@ -188,6 +188,20 @@ impl RGB {
         luminance_impl(&[self.r as f64, self.g as f64, self.b as f64])
     }
 
+    pub(crate) fn writable_color_value_fallback(rgb: Option<RGB>, layer: &Layer) -> i32 {
+        if let Some (received_rgb) = rgb {
+            return received_rgb.writable_color_value(layer);
+        }
+        if let Ok (true_color_index) = aci_to_rgb(layer.color.raw_value) {
+            return true_color_index.writable_color_value(layer);
+        }
+        if layer.is_layer_on {
+            16777215
+        } else {
+            -16777215
+        }
+    }
+
     pub(crate) fn writable_color_value(&self, layer: &Layer) -> i32 {
         let value = rgb_to_int(*self);
         if layer.is_layer_on {
