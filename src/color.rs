@@ -299,17 +299,39 @@ impl RGBA {
     }
 
     pub fn set_opacity_32_bit(&mut self, opacity: i32) {
-        let opacidad_byte = opacity & 0xFF;
-        self.a = opacidad_byte as u8;
+        if opacity == 0 {
+            self.a = 0;
+        } else {
+            let opacity_byte = opacity & 0xFF;
+            self.a = opacity_byte as u8;
+        }
+    }
+
+    pub fn set_transparency_32_bit(&mut self, transparency: i32) {
+        if transparency == 0 {
+            self.a = 255;
+        } else {
+            let transparency_byte = transparency & 0xFF;
+            self.a = 255 - (transparency_byte as u8);
+        }
     }
 
     pub fn set_opacity(&mut self, opacity: u8) {
         self.a = opacity;
     }
 
-    pub fn set_opacity_float(&mut self, opacity: f64) {
-        let opacity_byte = float_to_transparency(opacity) & 0xFF;
-        self.a = opacity_byte as u8;
+    pub fn set_transparency(&mut self, transparency: u8) {
+        self.a = 255 - transparency;
+    }
+
+    pub fn set_opacity_float(&mut self, opacity_float: f64) {
+        let alpha_byte = opacity_float_to_alpha(opacity_float) & 0xFF;
+        self.a = alpha_byte as u8;
+    }
+
+    pub fn set_transparency_float(&mut self, transparency_float: f64) {
+        let alpha_byte = transparency_float_to_alpha(transparency_float) & 0xFF;
+        self.a = alpha_byte as u8;
     }
 }
 
@@ -348,13 +370,25 @@ fn luminance_impl(color: &[f64]) -> f64 {
         .clamp(0.0, 1.0)
 }
 
-pub fn float_to_transparency(value: f64) -> i32 {
-    // Returns the DXF opacity value as an integer in the 0 a 255 range,
-    // where 0 is 100% transparent y 255 es opaque.
+pub fn transparency_float_to_alpha(transparency_float: f64) -> i32 {
+    // Returns the DXF alpha value as an integer in the 0 a 255 range,
+    // where 1 is 100% opaque and 255 is transparent.
     // final value has the flag 0x02000000.
 
     // Mapping: 0 (opaque) -> 255; 1 (100% transparent) -> 0
-    let t_value = ((1.0 - value).clamp(0.0, 1.0) * 255.0).round() as i32;
+    let t_value = ((1.0 - transparency_float).clamp(0.0, 1.0) * 255.0).round() as i32;
+
+    // DXF formula: 0x020000TT
+    t_value | 0x02000000
+}
+
+pub fn opacity_float_to_alpha(opacity_float: f64) -> i32 {
+    // Returns the DXF alpha value as an integer in the 0 a 255 range,
+    // where 1 is 100% opaque and 255 is transparent.
+    // final value has the flag 0x02000000.
+
+    // Mapping: 1 (opaque) -> 255; 0 (100% transparent) -> 0
+    let t_value = (opacity_float.clamp(0.0, 1.0) * 255.0).round() as i32;
 
     // DXF formula: 0x020000TT
     t_value | 0x02000000
