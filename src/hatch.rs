@@ -15,18 +15,64 @@ pub enum BoundaryPath {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
 pub struct HatchPatternBoundaryData {
-    pub path_type: BoundaryPathType,
+    pub path_types: Vec<BoundaryPathType>,
     pub path: BoundaryPath,
 }
 
 impl HatchPatternBoundaryData {
+    pub(crate) fn is_path_type_flag_set(value_bits: i32, flag: i32) -> bool {
+        (value_bits & flag) != 0
+    }
+
+    pub(crate) fn get_path_boundary_info(path_type_flags: i32) -> Vec<BoundaryPathType> {
+        let mut active_flags: Vec<BoundaryPathType> = Vec::new();
+        if HatchPatternBoundaryData::is_path_type_flag_set(
+            path_type_flags,
+            BoundaryPathType::Default as i32,
+        ) {
+            active_flags.push(BoundaryPathType::Default);
+        }
+        if HatchPatternBoundaryData::is_path_type_flag_set(
+            path_type_flags,
+            BoundaryPathType::External as i32,
+        ) {
+            active_flags.push(BoundaryPathType::External);
+        }
+        if HatchPatternBoundaryData::is_path_type_flag_set(
+            path_type_flags,
+            BoundaryPathType::Polyline as i32,
+        ) {
+            active_flags.push(BoundaryPathType::Polyline);
+        }
+        if HatchPatternBoundaryData::is_path_type_flag_set(
+            path_type_flags,
+            BoundaryPathType::Derived as i32,
+        ) {
+            active_flags.push(BoundaryPathType::Derived);
+        }
+        if HatchPatternBoundaryData::is_path_type_flag_set(
+            path_type_flags,
+            BoundaryPathType::Textbox as i32,
+        ) {
+            active_flags.push(BoundaryPathType::Textbox);
+        }
+        if HatchPatternBoundaryData::is_path_type_flag_set(
+            path_type_flags,
+            BoundaryPathType::Outermost as i32,
+        ) {
+            active_flags.push(BoundaryPathType::Outermost);
+        }
+        active_flags
+    }
+
     pub(crate) fn read_boundary_paths_section(
         hatch: &mut Hatch,
         loop_count: &mut i32,
         iter: &mut CodePairPutBack,
     ) -> DxfResult<()> {
         while *loop_count > 0 {
-            let mut path_type: Option<BoundaryPathType> = None;
+            let mut path_types: Vec<BoundaryPathType> = Vec::new();
+            let mut path_types_found: bool = false;
             let mut boundary_data_read = false;
             let mut source_boundary_objects_count: i32 = 0;
             loop {
@@ -37,12 +83,9 @@ impl HatchPatternBoundaryData {
                 };
                 match pair.code {
                     92 => {
-                        path_type = Some(enum_from_number!(
-                            BoundaryPathType,
-                            Default,
-                            from_i32,
-                            pair.assert_i32()?
-                        ));
+                        let path_type_flags = pair.assert_i32()?;
+                        path_types = Self::get_path_boundary_info(path_type_flags);
+                        path_types_found = true;
                     }
                     97 => {
                         source_boundary_objects_count = pair.assert_i32()?;
@@ -61,19 +104,19 @@ impl HatchPatternBoundaryData {
                         }
                     }
                     93 => {
-                        if path_type.is_some() && !boundary_data_read {
+                        if path_types_found && !boundary_data_read {
                             iter.put_back(Ok(pair));
                             boundary_data_read =
-                                Self::read_edge_boundary(hatch, path_type.unwrap(), iter)?;
+                                Self::read_edge_boundary(hatch, path_types.clone(), iter)?;
                         } else {
                             return Err(DxfError::UnexpectedEndOfInput);
                         }
                     }
                     72 => {
-                        if path_type.is_some() && !boundary_data_read {
+                        if path_types_found && !boundary_data_read {
                             iter.put_back(Ok(pair));
                             boundary_data_read =
-                                Self::read_polyline_boundary(hatch, path_type.unwrap(), iter)?;
+                                Self::read_polyline_boundary(hatch, path_types.clone(), iter)?;
                         } else {
                             return Err(DxfError::UnexpectedEndOfInput);
                         }
@@ -94,7 +137,7 @@ impl HatchPatternBoundaryData {
     }
     pub(crate) fn read_polyline_boundary(
         hatch: &mut Hatch,
-        path_type: BoundaryPathType,
+        path_types: Vec<BoundaryPathType>,
         parser: &mut CodePairPutBack,
     ) -> DxfResult<bool> {
         let mut polyline_data = PolylineBoundaryData {
@@ -145,7 +188,7 @@ impl HatchPatternBoundaryData {
                 polyline_data.vertices.push(vertex);
             }
             let patern_data: Self = Self {
-                path_type,
+                path_types,
                 path: BoundaryPath::Polyline(polyline_data),
             };
             hatch.pattern_boundary_data.push(patern_data);
@@ -154,7 +197,7 @@ impl HatchPatternBoundaryData {
     }
     pub(crate) fn read_edge_boundary(
         hatch: &mut Hatch,
-        path_type: BoundaryPathType,
+        path_types: Vec<BoundaryPathType>,
         parser: &mut CodePairPutBack,
     ) -> DxfResult<bool> {
         let edges_count: i32 = next_pair!(parser).assert_i32()?;
@@ -260,7 +303,7 @@ impl HatchPatternBoundaryData {
         }
 
         let data: Self = Self {
-            path_type,
+            path_types,
             path: BoundaryPath::Edge(EdgeBoundaryData { edges: edge_paths }),
         };
         hatch.pattern_boundary_data.push(data);
@@ -372,7 +415,7 @@ impl HatchPatternBoundaryData {
 impl Default for HatchPatternBoundaryData {
     fn default() -> Self {
         Self {
-            path_type: BoundaryPathType::Default,
+            path_types: Vec::new(),
             path: BoundaryPath::Polyline(PolylineBoundaryData {
                 is_closed: false,
                 vertices: Vec::new(),
